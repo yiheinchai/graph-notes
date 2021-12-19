@@ -5,11 +5,17 @@ const ListText = (props) => {
   const [showContent, setShowContent] = useState(false);
   return (
     <div className={styles.container}>
-      <div style={{ display: "flex", flexFlow: "row", marginBottom: "2rem" }}>
+      <div
+        style={{
+          display: "flex",
+          flexFlow: props.mindMapMode ? "row" : "column",
+          marginBottom: props.mindMapMode && "2rem",
+        }}
+      >
         <div style={{ display: "flex", flexFlow: "row" }}>
           {props.expandable && (
             <button
-              style={{ height: "2rem" }}
+              style={{ height: "1.2rem" }}
               onClick={() => setShowContent((previous) => !previous)}
             >
               O
