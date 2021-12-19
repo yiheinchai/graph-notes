@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack://src/components/ListText.module.css","webpack://src/App.css"],"names":[],"mappings":"AAAA,2BACE,gBACF,CCFA,EACE,8BAAwB,CAAxB,sBACF","file":"main.74f21a8d.chunk.css","sourcesContent":[".container {\r\n  margin-left: 1rem;\r\n}\r\n","* {\r\n  animation: all ease 0.2s;\r\n}\r\n"]}
