@@ -1,3 +1,8 @@
 * {
   animation: all ease 0.2s;
+  background-color: "#FAFBFC";
+}
+
+:root {
+  background-color: "#FAFBFC";
 }
