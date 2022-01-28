@@ -2,6 +2,8 @@ import { useState } from "react";
 import ListText from "./components/ListText";
 import "./App.css";
 import FileUploader from "./components/FileUploader";
+import Mindmap from "./components/mindmap/Mindmap";
+import Document from "./components/document/Document";
 
 const App = () => {
   // const [noteData, setNoteData] = useState(JSON.stringify(exampleObject2));
@@ -176,18 +178,6 @@ const App = () => {
     fileReader.readAsText(file);
   };
 
-  const objectExtractor = (object, mindMapMode) => {
-    if (object?.children?.length === 0 || !object?.children?.length)
-      return <ListText mindMapMode={mindMapMode} expandable={false} text={object.text} />;
-    return (
-      <ListText mindMapMode={mindMapMode} expandable={true} text={object.text}>
-        {object.children.map((child) => {
-          return objectExtractor(child, mindMapMode);
-        })}
-      </ListText>
-    );
-  };
-
   return (
     <div>
       <h3>Notes</h3>
@@ -196,12 +186,8 @@ const App = () => {
       <button onClick={() => setMindMapMode((previous) => !previous)}>Toggle Mindmap Mode</button>
       {file && processFile()}
       <div>{file && file.name}</div>
-      {fileJSON && objectExtractor(fileJSON, mindMapMode)}
-      {/* <form onSubmit={updateNotes}>
-        <input placeholder="write your notes here"></input>
-        <input placeholder="level"></input>
-      </form> */}
-      {/* {sampleHTML} */}
+      {fileJSON && mindMapMode && <Mindmap fileJson={fileJSON} />}
+      {fileJSON && !mindMapMode && <Document fileJson={fileJSON} />}
       <div
         id="uploadedDocument"
         style={{ display: "none" }}
