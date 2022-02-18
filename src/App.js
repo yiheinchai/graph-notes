@@ -3,6 +3,15 @@ import ListText from "./components/ListText";
 import "./App.css";
 import FileUploader from "./components/FileUploader";
 
+function extractTextNodes(currentElement) {
+  const childNodes = Array.from(currentElement.childNodes);
+  return childNodes.reduce((textString, node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return textString + " " + node.nodeValue;
+    } else return textString;
+  }, "");
+}
+
 const App = () => {
   // const [noteData, setNoteData] = useState(JSON.stringify(exampleObject2));
   const [mindMapMode, setMindMapMode] = useState(false);
@@ -51,6 +60,7 @@ const App = () => {
         if (current.localName === "h1") {
           insertChildren(previous[1], {
             text: current.textContent,
+            hierarchyLevel: 1,
             children: [],
           });
           return [1, previous[1]];
@@ -72,39 +82,42 @@ const App = () => {
           }
           if (previous[0] === currentHierarchy) {
             insertSibilingInLatestAndDeepestDepths(previous[1], {
-              text: current.textContent
+              text: extractTextNodes(current)
                 .replace(/[\x00-\x1F\x7F-\xFF]/g, "")
                 .replace("�", "")
                 .replace("�", "")
                 .replace("�", "")
                 .replace("�", "")
                 .replace("�", ""),
+              hierarchyLevel: currentHierarchy,
               children: [],
             });
           } else if (previous[0] > currentHierarchy) {
             insertSibilingAtSpecifiedDepth(
               previous[1],
               {
-                text: current.textContent
+                text: extractTextNodes(current)
                   .replace(/[\x00-\x1F\x7F-\xFF]/g, "")
                   .replace("�", "")
                   .replace("�", "")
                   .replace("�", "")
                   .replace("�", "")
                   .replace("�", ""),
+                hierarchyLevel: currentHierarchy,
                 children: [],
               },
               currentHierarchy
             );
           } else if (previous[0] < currentHierarchy) {
             insertChildInLatestAndDeepestDepths(previous[1], {
-              text: current.textContent
+              text: extractTextNodes(current)
                 .replace(/[\x00-\x1F\x7F-\xFF]/g, "")
                 .replace("�", "")
                 .replace("�", "")
                 .replace("�", "")
                 .replace("�", "")
                 .replace("�", ""),
+              hierarchyLevel: currentHierarchy,
               children: [],
             });
           }
@@ -178,9 +191,21 @@ const App = () => {
 
   const objectExtractor = (object, mindMapMode) => {
     if (object?.children?.length === 0 || !object?.children?.length)
-      return <ListText mindMapMode={mindMapMode} expandable={false} text={object.text} />;
+      return (
+        <ListText
+          mindMapMode={mindMapMode}
+          expandable={false}
+          text={object.text}
+          textHierarchy={object.hierarchyLevel}
+        />
+      );
     return (
-      <ListText mindMapMode={mindMapMode} expandable={true} text={object.text}>
+      <ListText
+        mindMapMode={mindMapMode}
+        expandable={true}
+        text={object.text}
+        textHierarchy={object.hierarchyLevel}
+      >
         {object.children.map((child) => {
           return objectExtractor(child, mindMapMode);
         })}

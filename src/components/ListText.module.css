@@ -1,3 +1,113 @@
 .container {
-  margin-left: 1rem;
+  display: flex;
+  flex-flow: row;
+}
+
+.text__wrapper_mindmap {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.text__wrapper_document {
+  display: flex;
+  flex-flow: column;
+}
+
+.text__card_mindmap {
+  display: flex;
+  flex-flow: row;
+  gap: 0.3rem;
+  background-color: white;
+  background-color: white;
+  border: 1px solid #eaecf1;
+  border-radius: 2rem;
+  padding: 0.5rem;
+}
+.text__card_document {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+}
+
+.text_mindmap {
+  white-space: nowrap;
+}
+
+.text_document {
+  max-width: 100%;
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+  caret-color: rgb(55, 53, 47);
+  padding: 3px 2px;
+  text-align: left;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+}
+
+.text_expandable {
+}
+
+.text__hierarchy_1 {
+  font-weight: 600;
+  font-size: 1.875rem;
+}
+.text__hierarchy_2 {
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+.text__hierarchy_3 {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+.text__card__hierarchy_1 {
+  margin-top: 2rem;
+  margin-bottom: 4px;
+}
+.text__card__hierarchy_2 {
+  margin-top: 1.4rem;
+  margin-bottom: 1px;
+}
+.text__card__hierarchy_3 {
+  margin-top: 1rem;
+  margin-bottom: 1px;
+}
+
+.document__toggle {
+  display: flex;
+  flex-flow: row;
+  align-items: flex-start;
+}
+
+.document__toggle_icon {
+  width: 0.6875em;
+  height: 0.6875em;
+  display: block;
+  fill: inherit;
+  flex-shrink: 0;
+  backface-visibility: hidden;
+  transition: transform 200ms ease-out 0s;
+  opacity: 1;
+}
+
+.toggle__open {
+  transform: rotateZ(180deg);
+}
+.toggle__closed {
+  transform: rotateZ(90deg);
+}
+
+.icon__wrapper {
+  user-select: none;
+  transition: background 20ms ease-in 0s;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  margin-left: 24px;
 }
