@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { storeDatainLocalStorage } from "../App";
 import styles from "./ListText.module.css";
 import AddButton from "./ui/buttons/AddButton";
@@ -24,6 +24,7 @@ const ListText = (props) => {
   const [textValue, setTextValue] = useState(props.text);
   const [parentObject, setParentObject] = useState(props.object);
 
+  console.log("List Rendered", props.text);
   // useEffect(() => {
   //   props.modifyParentObject((previous) => {
   //     const copyofParent = JSON.parse(JSON.stringify(previous));
@@ -31,6 +32,10 @@ const ListText = (props) => {
   //     return copyofParent;
   //   });
   // }, textValue);
+
+  const handleSetParent = useCallback(() => {
+    return setParentObject;
+  }, []);
 
   useEffect(() => {
     // debouncing updates to prevent lags
@@ -75,9 +80,7 @@ const ListText = (props) => {
       );
 
       if (props.hierarchyLevel === 0) {
-        console.log(props.hierarchyLevel);
         props.modifyParentObject(parentObject);
-        console.log(props.modifyParentObject);
         return;
       }
       if (props.hierarchyLevel > 0) {
@@ -100,7 +103,7 @@ const ListText = (props) => {
     // Checking isValidElement is the safe way and avoids a typescript
     // error too.
     if (React.isValidElement(child)) {
-      return React.cloneElement(child, { modifyParentObject: setParentObject, childIndex: index });
+      return React.cloneElement(child, { modifyParentObject: handleSetParent, childIndex: index });
     }
     return child;
   });
@@ -159,4 +162,4 @@ const ListText = (props) => {
   );
 };
 
-export default ListText;
+export default React.memo(ListText);
