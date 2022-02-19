@@ -9,3 +9,7 @@
 :root {
   background-color: "#FAFBFC";
 }
+
+input {
+  all: unset;
+}

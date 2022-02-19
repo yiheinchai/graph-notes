@@ -111,3 +111,13 @@
   border-radius: 3px;
   margin-left: 24px;
 }
+
+.text__input {
+  -webkit-appearance: none;
+  border: none;
+  width: 800px;
+}
+
+.text__input:focus {
+  border: none;
+}

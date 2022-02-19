@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState, useRef, useLayoutEffect } from "react";
+import React from "react";
 import styles from "./ListText.module.css";
 import { IoAddOutline } from "react-icons/io5";
 import AddButton from "./ui/buttons/AddButton";
+import { storeDatainLocalStorage } from "../App";
 
 function getTextStyles(textHierarchy) {
   if (textHierarchy === 1) return styles["text__hierarchy_1"];
@@ -19,12 +21,69 @@ function isLargeHeader(textHierarchy) {
 }
 
 const ListText = (props) => {
-  const [showContent, setShowContent] = useState(props.expandable ? true : false);
+  const [showContent, setShowContent] = useState(false);
+  const [textValue, setTextValue] = useState(props.text);
+  const [parentObject, setParentObject] = useState(props.object);
+
+  // useEffect(() => {
+  //   props.modifyParentObject((previous) => {
+  //     const copyofParent = JSON.parse(JSON.stringify(previous));
+  //     copyofParent.children[props.childIndex].text = textValue;
+  //     return copyofParent;
+  //   });
+  // }, textValue);
+
+  const firstUpdate = useRef(true);
+  useLayoutEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+    if (typeof props.modifyParentObject !== "function") return;
+    console.log(props.textHierarchy, "mutation!");
+    props.modifyParentObject((previous) => {
+      const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
+      copyofParent.children[props.childIndex].text = textValue;
+      console.log(copyofParent);
+      return copyofParent;
+    });
+  }, [textValue]);
+
+  useLayoutEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+    if (props.textHierarchy === 0) {
+    }
+    if (typeof props.modifyParentObject !== "function") return;
+    console.log(props.textHierarchy, "parent mutation!");
+    console.log(parentObject);
+    props.modifyParentObject((previous) => {
+      const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
+      copyofParent.children[props.childIndex] = parentObject;
+      if (props.textHierarchy === 1) {
+        storeDatainLocalStorage(copyofParent);
+      }
+      return copyofParent;
+    });
+  }, [parentObject]);
+
   // Guard to prevent rendering text with no length
   if (props.text.trim().length === 0) return <></>;
 
+  const childrenWithProps = React.Children.map(props.children, (child, index) => {
+    // Checking isValidElement is the safe way and avoids a typescript
+    // error too.
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, { modifyParentObject: setParentObject, childIndex: index });
+    }
+    return child;
+  });
+
   return (
     <div className={!isLargeHeader(props.textHierarchy) && styles.container}>
+      {props.textHierarchy === 1 && console.log(parentObject)}
       {!isLargeHeader(props.textHierarchy) && (
         <div className={styles["document__toggle"]}>
           <div
@@ -59,11 +118,19 @@ const ListText = (props) => {
             } ${!props.mindMapMode && getTextStyles(props.textHierarchy)}
             `}
           >
-            {props.text}
+            <input
+              className={styles["text__input"]}
+              onChange={(event) => {
+                setTextValue(event.target.value);
+              }}
+              value={textValue}
+            />
             {isLargeHeader(props.textHierarchy) && <AddButton onClickHandler={setShowContent} />}
           </div>
         </div>
-        {showContent && <div style={{ display: "flex", flexFlow: "column" }}>{props.children}</div>}
+        {showContent && (
+          <div style={{ display: "flex", flexFlow: "column" }}>{childrenWithProps}</div>
+        )}
       </div>
     </div>
   );

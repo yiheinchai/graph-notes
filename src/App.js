@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ListText from "./components/ListText";
 import "./App.css";
 import FileUploader from "./components/FileUploader";
@@ -12,22 +12,23 @@ function extractTextNodes(currentElement) {
   }, "");
 }
 
+export function storeDatainLocalStorage(data) {
+  localStorage.setItem("storedNotes", JSON.stringify(data));
+}
+
 const App = () => {
-  // const [noteData, setNoteData] = useState(JSON.stringify(exampleObject2));
   const [mindMapMode, setMindMapMode] = useState(false);
   const [file, setFile] = useState();
   const [fileData, setFileData] = useState();
   const [fileJSON, setFileJSON] = useState();
+  const [newfileJSON, setNewFileJSON] = useState();
 
-  // console.log("sample html", sampleHTML)
-
-  // const updateNotes = (event) => {
-  //   event.preventDefault();
-  //   console.log("Notes updated!");
-  //   setNoteData((previousObject) => {
-
-  //   })
-  // };
+  useEffect(() => {
+    const storedNotes = localStorage.getItem("storedNotes");
+    if (storedNotes) {
+      setFileJSON(JSON.parse(storedNotes));
+    }
+  }, []);
 
   const htmlProcessor = () => {
     const elementHierarchy = {
@@ -52,11 +53,6 @@ const App = () => {
 
     const output = elementArray.reduce(
       (previous, current, index, array) => {
-        if (current.localName === "p") {
-          // try {
-          //   current.removeFirstChild(current.querySelector("span"));
-          // } catch {}
-        }
         if (current.localName === "h1") {
           insertChildren(previous[1], {
             text: current.textContent,
@@ -76,6 +72,10 @@ const App = () => {
           }
           let currentHierarchy;
           if (current.localName === "p") {
+            // prevent generating node for empty strings
+            if (extractTextNodes(current).trim().length === 0) {
+              return previous;
+            }
             currentHierarchy = elementHierarchy[current.localName][current.style.marginLeft];
           } else {
             currentHierarchy = elementHierarchy[current.localName];
@@ -125,7 +125,7 @@ const App = () => {
         }
         return previous;
       },
-      [-1, { text: "Root", children: [] }]
+      [-1, { text: "Root", textHierarchy: 0, children: [] }]
     );
 
     function insertSibilingInLatestAndDeepestDepths(object, data) {
@@ -189,13 +189,28 @@ const App = () => {
     fileReader.readAsText(file);
   };
 
-  const objectExtractor = (object, mindMapMode) => {
+  const objectExtractor = (object, parentObject, mindMapMode) => {
+    if (object.textHierarchy < 1) {
+      return (
+        <ListText
+          mindMapMode={mindMapMode}
+          expandable={false}
+          text={object.text}
+          object={object}
+          parentObject={parentObject ? parentObject : object}
+          textHierarchy={object.hierarchyLevel}
+          modifyParentObject={setNewFileJSON}
+        />
+      );
+    }
     if (object?.children?.length === 0 || !object?.children?.length)
       return (
         <ListText
           mindMapMode={mindMapMode}
           expandable={false}
           text={object.text}
+          object={object}
+          parentObject={parentObject ? parentObject : object}
           textHierarchy={object.hierarchyLevel}
         />
       );
@@ -204,10 +219,12 @@ const App = () => {
         mindMapMode={mindMapMode}
         expandable={true}
         text={object.text}
+        object={object}
+        parentObject={parentObject ? parentObject : object}
         textHierarchy={object.hierarchyLevel}
       >
         {object.children.map((child) => {
-          return objectExtractor(child, mindMapMode);
+          return objectExtractor(child, object, mindMapMode);
         })}
       </ListText>
     );
@@ -218,15 +235,17 @@ const App = () => {
       <h3>Notes</h3>
       <FileUploader submitHandler={setFile} />
       <button onClick={htmlProcessor}>Click to process</button>
+      <button
+        onClick={() => {
+          storeDatainLocalStorage(fileJSON);
+        }}
+      >
+        Store Data in LocalStorage
+      </button>
       <button onClick={() => setMindMapMode((previous) => !previous)}>Toggle Mindmap Mode</button>
       {file && processFile()}
       <div>{file && file.name}</div>
       {fileJSON && objectExtractor(fileJSON, mindMapMode)}
-      {/* <form onSubmit={updateNotes}>
-        <input placeholder="write your notes here"></input>
-        <input placeholder="level"></input>
-      </form> */}
-      {/* {sampleHTML} */}
       <div
         id="uploadedDocument"
         style={{ display: "none" }}
