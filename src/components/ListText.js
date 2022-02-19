@@ -1,23 +1,22 @@
-import { useEffect, useState, useRef, useLayoutEffect } from "react";
-import React from "react";
-import styles from "./ListText.module.css";
-import { IoAddOutline } from "react-icons/io5";
-import AddButton from "./ui/buttons/AddButton";
+import React, { useEffect, useState } from "react";
 import { storeDatainLocalStorage } from "../App";
+import styles from "./ListText.module.css";
+import AddButton from "./ui/buttons/AddButton";
 
-function getTextStyles(textHierarchy) {
-  if (textHierarchy === 1) return styles["text__hierarchy_1"];
-  if (textHierarchy === 2) return styles["text__hierarchy_2"];
-  if (textHierarchy === 3) return styles["text__hierarchy_3"];
+function getTextStyles(hierarchyLevel) {
+  if (hierarchyLevel === 0) return styles["text__hierarchy_0"];
+  if (hierarchyLevel === 1) return styles["text__hierarchy_1"];
+  if (hierarchyLevel === 2) return styles["text__hierarchy_2"];
+  if (hierarchyLevel === 3) return styles["text__hierarchy_3"];
 }
-function getTextCardStyles(textHierarchy) {
-  if (textHierarchy === 1) return styles["text__card__hierarchy_1"];
-  if (textHierarchy === 2) return styles["text__card__hierarchy_2"];
-  if (textHierarchy === 3) return styles["text__card__hierarchy_3"];
+function getTextCardStyles(hierarchyLevel) {
+  if (hierarchyLevel === 1) return styles["text__card__hierarchy_1"];
+  if (hierarchyLevel === 2) return styles["text__card__hierarchy_2"];
+  if (hierarchyLevel === 3) return styles["text__card__hierarchy_3"];
 }
 
-function isLargeHeader(textHierarchy) {
-  if (textHierarchy < 4) return true;
+function isLargeHeader(hierarchyLevel) {
+  if (hierarchyLevel < 4) return true;
 }
 
 const ListText = (props) => {
@@ -33,40 +32,65 @@ const ListText = (props) => {
   //   });
   // }, textValue);
 
-  const firstUpdate = useRef(true);
-  useLayoutEffect(() => {
-    if (firstUpdate.current) {
-      firstUpdate.current = false;
-      return;
-    }
-    if (typeof props.modifyParentObject !== "function") return;
-    console.log(props.textHierarchy, "mutation!");
-    props.modifyParentObject((previous) => {
-      const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
-      copyofParent.children[props.childIndex].text = textValue;
-      console.log(copyofParent);
-      return copyofParent;
-    });
+  useEffect(() => {
+    // debouncing updates to prevent lags
+    const timeoutId = setTimeout(() => {
+      if (typeof props.modifyParentObject !== "function") {
+        console.log("name:", props.text, "handler not a function!", props.hierarchyLevel);
+        return;
+      }
+
+      if (props.hierarchyLevel === 0) {
+        const copyofObject = JSON.parse(JSON.stringify(props.object));
+        copyofObject.text = textValue;
+        props.modifyParentObject(copyofObject);
+        return;
+      }
+
+      if (props.hierarchyLevel > 0) {
+        const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
+        copyofParent.children[props.childIndex || 0].text = textValue;
+        console.log("name:", props.text, copyofParent, "mutation!", props.hierarchyLevel);
+        props.modifyParentObject(copyofParent);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
   }, [textValue]);
 
-  useLayoutEffect(() => {
-    if (firstUpdate.current) {
-      firstUpdate.current = false;
-      return;
-    }
-    if (props.textHierarchy === 0) {
-    }
-    if (typeof props.modifyParentObject !== "function") return;
-    console.log(props.textHierarchy, "parent mutation!");
-    console.log(parentObject);
-    props.modifyParentObject((previous) => {
-      const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
-      copyofParent.children[props.childIndex] = parentObject;
-      if (props.textHierarchy === 1) {
-        storeDatainLocalStorage(copyofParent);
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (typeof props.modifyParentObject !== "function") {
+        console.log("name:", props.text, "handler not a function!", props.hierarchyLevel);
+        return;
       }
-      return copyofParent;
-    });
+      console.log(
+        "name:",
+        props.text,
+        parentObject,
+        "parent mutations",
+        props.hierarchyLevel,
+        "child index",
+        props.childIndex
+      );
+
+      if (props.hierarchyLevel === 0) {
+        console.log(props.hierarchyLevel);
+        props.modifyParentObject(parentObject);
+        console.log(props.modifyParentObject);
+        return;
+      }
+      if (props.hierarchyLevel > 0) {
+        const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
+        copyofParent.children[props.childIndex] = parentObject;
+        // if (props.hierarchyLevel === 1) {
+        //   storeDatainLocalStorage(copyofParent);
+        // }
+        props.modifyParentObject(copyofParent);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
   }, [parentObject]);
 
   // Guard to prevent rendering text with no length
@@ -82,9 +106,8 @@ const ListText = (props) => {
   });
 
   return (
-    <div className={!isLargeHeader(props.textHierarchy) && styles.container}>
-      {props.textHierarchy === 1 && console.log(parentObject)}
-      {!isLargeHeader(props.textHierarchy) && (
+    <div className={!isLargeHeader(props.hierarchyLevel) ? styles.container : ""}>
+      {!isLargeHeader(props.hierarchyLevel) && (
         <div className={styles["document__toggle"]}>
           <div
             className={styles["icon__wrapper"]}
@@ -110,12 +133,12 @@ const ListText = (props) => {
         <div
           className={`${
             props.mindMapMode ? styles["text__card_mindmap"] : styles["text__card_document"]
-          } ${getTextCardStyles(props.textHierarchy)}`}
+          } ${getTextCardStyles(props.hierarchyLevel)}`}
         >
           <div
             className={`${props.mindMapMode ? styles["text_mindmap"] : styles["text_document"]} ${
               props.expandable && styles["text_expandable"]
-            } ${!props.mindMapMode && getTextStyles(props.textHierarchy)}
+            } ${!props.mindMapMode && getTextStyles(props.hierarchyLevel)}
             `}
           >
             <input
@@ -125,7 +148,7 @@ const ListText = (props) => {
               }}
               value={textValue}
             />
-            {isLargeHeader(props.textHierarchy) && <AddButton onClickHandler={setShowContent} />}
+            {isLargeHeader(props.hierarchyLevel) && <AddButton onClickHandler={setShowContent} />}
           </div>
         </div>
         {showContent && (

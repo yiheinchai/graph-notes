@@ -29,6 +29,12 @@ const App = () => {
       setFileJSON(JSON.parse(storedNotes));
     }
   }, []);
+  useEffect(() => {
+    console.log("newfileJSON set!", newfileJSON);
+    if (newfileJSON) {
+      storeDatainLocalStorage(newfileJSON);
+    }
+  }, [newfileJSON]);
 
   const htmlProcessor = () => {
     const elementHierarchy = {
@@ -125,7 +131,7 @@ const App = () => {
         }
         return previous;
       },
-      [-1, { text: "Root", textHierarchy: 0, children: [] }]
+      [-1, { text: "Circulation and Breathing", hierarchyLevel: 0, children: [] }]
     );
 
     function insertSibilingInLatestAndDeepestDepths(object, data) {
@@ -190,17 +196,22 @@ const App = () => {
   };
 
   const objectExtractor = (object, parentObject, mindMapMode) => {
-    if (object.textHierarchy < 1) {
+    if (object.hierarchyLevel < 1) {
+      console.log("root text", object.text, object.hierarchyLevel);
       return (
         <ListText
           mindMapMode={mindMapMode}
-          expandable={false}
+          expandable={true}
           text={object.text}
           object={object}
           parentObject={parentObject ? parentObject : object}
-          textHierarchy={object.hierarchyLevel}
+          hierarchyLevel={object.hierarchyLevel}
           modifyParentObject={setNewFileJSON}
-        />
+        >
+          {object.children.map((child) => {
+            return objectExtractor(child, object, mindMapMode);
+          })}
+        </ListText>
       );
     }
     if (object?.children?.length === 0 || !object?.children?.length)
@@ -211,7 +222,7 @@ const App = () => {
           text={object.text}
           object={object}
           parentObject={parentObject ? parentObject : object}
-          textHierarchy={object.hierarchyLevel}
+          hierarchyLevel={object.hierarchyLevel}
         />
       );
     return (
@@ -221,7 +232,7 @@ const App = () => {
         text={object.text}
         object={object}
         parentObject={parentObject ? parentObject : object}
-        textHierarchy={object.hierarchyLevel}
+        hierarchyLevel={object.hierarchyLevel}
       >
         {object.children.map((child) => {
           return objectExtractor(child, object, mindMapMode);

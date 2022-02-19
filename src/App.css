@@ -8,6 +8,10 @@
 
 :root {
   background-color: "#FAFBFC";
+  display: flex;
+  flex-flow: row;
+  justify-content: center;
+  width: 100vw;
 }
 
 input {

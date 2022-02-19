@@ -50,6 +50,10 @@
 .text_expandable {
 }
 
+.text__hierarchy_0 {
+  font-weight: 700;
+  font-size: 2.25rem;
+}
 .text__hierarchy_1 {
   font-weight: 600;
   font-size: 1.875rem;
