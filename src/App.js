@@ -217,7 +217,7 @@ const App = () => {
     fileReader.readAsText(file);
   };
 
-  const objectExtractor = (object, parentObject, mindMapMode) => {
+  const objectExtractor = (object, mindMapMode) => {
     if (object.hierarchyLevel < 1) {
       console.log("root text", object.text, object.hierarchyLevel);
       return (
@@ -226,12 +226,11 @@ const App = () => {
           expandable={true}
           text={object.text}
           object={object}
-          parentObject={parentObject ? parentObject : object}
           hierarchyLevel={object.hierarchyLevel}
           modifyParentObject={setFileJSON}
         >
           {object.children.map((child) => {
-            return objectExtractor(child, object, mindMapMode);
+            return objectExtractor(child, mindMapMode);
           })}
         </ListText>
       );
@@ -243,7 +242,6 @@ const App = () => {
           expandable={false}
           text={object.text}
           object={object}
-          parentObject={parentObject ? parentObject : object}
           hierarchyLevel={object.hierarchyLevel}
         />
       );
@@ -253,11 +251,10 @@ const App = () => {
         expandable={true}
         text={object.text}
         object={object}
-        parentObject={parentObject ? parentObject : object}
         hierarchyLevel={object.hierarchyLevel}
       >
         {object.children.map((child) => {
-          return objectExtractor(child, object, mindMapMode);
+          return objectExtractor(child, mindMapMode);
         })}
       </ListText>
     );

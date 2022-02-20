@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ContentEditable from "react-contenteditable";
-import { storeDatainLocalStorage } from "../App";
 import styles from "./ListText.module.css";
 import AddButton from "./ui/buttons/AddButton";
 
@@ -40,12 +39,7 @@ function updateText(object, id, dataToUpdate) {
 const ListText = (props) => {
   const [showContent, setShowContent] = useState(props.expandable ? true : false);
   const [textValue, setTextValue] = useState(props.text);
-  const [parentObject, setParentObject] = useState(props.object);
   const contentEditRef = useRef();
-
-  const handleSetParent = useCallback((value) => {
-    return setParentObject(value);
-  }, []);
 
   const firstUpdate = useRef(true);
   useEffect(() => {
@@ -68,15 +62,6 @@ const ListText = (props) => {
 
   // Guard to prevent rendering text with no length
   if (props.text.trim().length === 0) return <></>;
-
-  const childrenWithProps = React.Children.map(props.children, (child, index) => {
-    // Checking isValidElement is the safe way and avoids a typescript
-    // error too.
-    if (React.isValidElement(child)) {
-      return React.cloneElement(child, { modifyParentObject: handleSetParent, childIndex: index });
-    }
-    return child;
-  });
 
   return (
     <div className={!isLargeHeader(props.hierarchyLevel) ? styles.container : ""}>
@@ -125,9 +110,7 @@ const ListText = (props) => {
             />
           </div>
         </div>
-        {showContent && (
-          <div style={{ display: "flex", flexFlow: "column" }}>{childrenWithProps}</div>
-        )}
+        {showContent && <div style={{ display: "flex", flexFlow: "column" }}>{props.children}</div>}
       </div>
     </div>
   );
