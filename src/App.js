@@ -9,6 +9,9 @@ function extractTextNodes(currentElement) {
   return childNodes.reduce((textString, node) => {
     if (node.nodeType === Node.TEXT_NODE) {
       return textString + " " + node.nodeValue;
+    } else if (node.localName === "a") {
+      // some headers are rendered as an 'a' tag in a h2 tag
+      return textString + " " + node.text;
     } else return textString;
   }, "");
 }
@@ -17,50 +20,66 @@ export function storeDatainLocalStorage(data) {
   localStorage.setItem("storedNotes", JSON.stringify(data));
 }
 
-function insertSibilingInLatestAndDeepestDepths(object, data) {
+function insertSibilingInLatestAndDeepestDepths(object, dataToBeInserted, previousIndex = "") {
   if (object.children[object.children.length - 1].children.length === 0) {
-    return insertChildren(object, data);
+    const currentLevelIndex = object.children.length - 1 + 1; // get index of latest child and add one for the new insertion
+    const newIndex = previousIndex + currentLevelIndex.toString().padStart(2, "0");
+    return insertChildren(object, { ...dataToBeInserted, index: newIndex });
   } else {
+    const currentLevelIndex = object.children.length - 1;
+    const newIndex = previousIndex + currentLevelIndex.toString().padStart(2, "0");
     return insertSibilingInLatestAndDeepestDepths(
       object.children[object.children.length - 1],
-      data
+      dataToBeInserted,
+      newIndex
     );
   }
 }
 
-function insertChildInLatestAndDeepestDepths(object, data) {
+function insertChildInLatestAndDeepestDepths(object, dataToBeInserted, previousIndex = "") {
   if (object.children.length === 0) {
-    return insertChildren(object, data);
+    return insertChildren(object, { ...dataToBeInserted, index: previousIndex + "00" });
   } else {
-    return insertChildInLatestAndDeepestDepths(object.children[object.children.length - 1], data);
+    const currentLevelIndex = object.children.length - 1;
+    const newIndex = previousIndex + currentLevelIndex.toString().padStart(2, "0");
+    return insertChildInLatestAndDeepestDepths(
+      object.children[object.children.length - 1],
+      dataToBeInserted,
+      newIndex
+    );
   }
 }
-function insertChildAtSpecifiedDepth(object, data, depth) {
+function insertChildAtSpecifiedDepth(object, dataToBeInserted, depth) {
   if (depth === 0) {
-    return insertChildren(object, data);
+    return insertChildren(object, dataToBeInserted);
   } else {
     return insertChildAtSpecifiedDepth(
       object.children[object.children.length - 1],
-      data,
+      dataToBeInserted,
       depth - 1
     );
   }
 }
-function insertSibilingAtSpecifiedDepth(object, data, depth) {
+function insertSibilingAtSpecifiedDepth(object, dataToBeInserted, depth, previousIndex = "") {
   if (depth === 1) {
-    return insertChildren(object, data);
+    const currentLevelIndex = object.children.length - 1 + 1;
+    const newIndex = previousIndex + currentLevelIndex.toString().padStart(2, "0");
+    return insertChildren(object, { ...dataToBeInserted, index: newIndex });
   } else {
+    const currentLevelIndex = object.children.length - 1;
+    const newIndex = previousIndex + currentLevelIndex.toString().padStart(2, "0");
     return insertSibilingAtSpecifiedDepth(
       object.children[object.children.length - 1],
-      data,
-      depth - 1
+      dataToBeInserted,
+      depth - 1,
+      newIndex
     );
   }
 }
 
 // Access the last correct node and append another chlid
-function insertChildren(object, data) {
-  object.children.push(data);
+function insertChildren(object, dataToBeInserted) {
+  object.children.push(dataToBeInserted);
   return object;
 }
 
@@ -118,6 +137,7 @@ const App = () => {
           return [1, previous[1]];
         }
         if (index > 0 && array[index - 1].localName) {
+          // guard to prevent images and tables from being added to object
           if (
             current.localName != "p" &&
             current.localName != "h1" &&
@@ -126,6 +146,7 @@ const App = () => {
           ) {
             return previous;
           }
+
           let currentHierarchy;
           if (current.localName === "p") {
             // prevent generating node for empty strings
@@ -135,6 +156,7 @@ const App = () => {
             currentHierarchy = elementHierarchy[current.localName][current.style.marginLeft];
           } else {
             currentHierarchy = elementHierarchy[current.localName];
+            console.log(current.localName, extractTextNodes(current));
           }
           if (previous[0] === currentHierarchy) {
             insertSibilingInLatestAndDeepestDepths(previous[1], {
@@ -242,33 +264,42 @@ const App = () => {
   };
 
   return (
-    <div>
-      <h3>Notes</h3>
-      <FileUploader submitHandler={setFile} />
-      <button onClick={htmlProcessor}>Click to process</button>
-      <button
-        onClick={() => {
-          storeDatainLocalStorage(fileJSONMemoized);
-        }}
-      >
-        Store Data in LocalStorage
-      </button>
-      <button onClick={() => setMindMapMode((previous) => !previous)}>Toggle Mindmap Mode</button>
-      {file && processFile()}
-      <div>{file && file.name}</div>
-      {fileJSON && objectExtractor(fileJSON, mindMapMode)}
-      {/* {fileJSONMemoized && (
+    <div style={{ width: "100vw", display: "flex", flexFlow: "row", justifyContent: "center" }}>
+      <div style={{ maxWidth: "800px", minWidth: "800px" }}>
+        <h3>Notes</h3>
+        <FileUploader submitHandler={setFile} />
+        <button onClick={htmlProcessor}>Click to process</button>
+        <button
+          onClick={() => {
+            storeDatainLocalStorage(fileJSONMemoized);
+          }}
+        >
+          Store Data in LocalStorage
+        </button>
+        <button
+          onClick={() => {
+            localStorage.clear();
+          }}
+        >
+          Clear LocalStorage
+        </button>
+        <button onClick={() => setMindMapMode((previous) => !previous)}>Toggle Mindmap Mode</button>
+        {file && processFile()}
+        <div>{file && file.name}</div>
+        {fileJSON && objectExtractor(fileJSON, mindMapMode)}
+        {/* {fileJSONMemoized && (
         <ListRenderer
           child={fileJSONMemoized}
           object={fileJSONMemoized}
           mindMapMode={mindMapMode}
         />
       )} */}
-      <div
-        id="uploadedDocument"
-        style={{ display: "none" }}
-        dangerouslySetInnerHTML={{ __html: fileData }}
-      ></div>
+        <div
+          id="uploadedDocument"
+          style={{ display: "none" }}
+          dangerouslySetInnerHTML={{ __html: fileData }}
+        ></div>
+      </div>
     </div>
   );
 };

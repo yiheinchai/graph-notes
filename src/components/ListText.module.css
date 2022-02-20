@@ -1,6 +1,7 @@
 .container {
   display: flex;
   flex-flow: row;
+  flex-grow: 1;
 }
 
 .text__wrapper_mindmap {
@@ -12,6 +13,7 @@
 .text__wrapper_document {
   display: flex;
   flex-flow: column;
+  flex-grow: 1;
 }
 
 .text__card_mindmap {
@@ -119,7 +121,8 @@
 .text__input {
   -webkit-appearance: none;
   border: none;
-  width: 800px;
+  cursor: text;
+  flex-grow: 1;
 }
 
 .text__input:focus {

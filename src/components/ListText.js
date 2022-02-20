@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
+import ContentEditable from "react-contenteditable";
 import { storeDatainLocalStorage } from "../App";
 import styles from "./ListText.module.css";
 import AddButton from "./ui/buttons/AddButton";
@@ -19,80 +20,51 @@ function isLargeHeader(hierarchyLevel) {
   if (hierarchyLevel < 4) return true;
 }
 
+function modifyObjectAtID(object, id, dataToUpdate) {
+  const currentId = parseInt(id.slice(0, 2));
+  console.log("current:", currentId, "total: ", id);
+  if (id.length === 2) {
+    return updateText(object, currentId, dataToUpdate);
+  } else {
+    const newId = id.slice(2);
+    modifyObjectAtID(object.children[currentId], newId, dataToUpdate);
+    return object;
+  }
+}
+
+function updateText(object, id, dataToUpdate) {
+  object.children[id].text = dataToUpdate;
+  return object;
+}
+
 const ListText = (props) => {
   const [showContent, setShowContent] = useState(props.expandable ? true : false);
   const [textValue, setTextValue] = useState(props.text);
   const [parentObject, setParentObject] = useState(props.object);
+  const contentEditRef = useRef();
 
   const handleSetParent = useCallback((value) => {
     return setParentObject(value);
   }, []);
 
-  const firstUpdateMutation = useRef(true);
+  const firstUpdate = useRef(true);
   useEffect(() => {
-    if (firstUpdateMutation.current) {
-      firstUpdateMutation.current = false;
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
       return;
     }
-    // debouncing updates to prevent lags
-    const timeoutId = setTimeout(() => {
-      if (typeof props.modifyParentObject !== "function") {
-        console.log("name:", props.text, "handler not a function!", props.hierarchyLevel);
-        return;
-      }
-
-      if (props.hierarchyLevel === 0) {
-        const copyofObject = JSON.parse(JSON.stringify(props.object));
-        copyofObject.text = textValue;
-        props.modifyParentObject(copyofObject);
-        return;
-      }
-
-      if (props.hierarchyLevel > 0) {
-        const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
-        copyofParent.children[props.childIndex || 0].text = textValue;
-        console.log("name:", props.text, copyofParent, "mutation!", props.hierarchyLevel);
-        props.modifyParentObject(copyofParent);
-      }
+    const debouncingTimeout = setTimeout(() => {
+      console.log("Setting index");
+      if (!props.object?.index) return;
+      const notes = JSON.parse(localStorage.getItem("storedNotes"));
+      localStorage.setItem(
+        "storedNotes",
+        JSON.stringify(modifyObjectAtID(notes, props.object.index, textValue))
+      );
     }, 2000);
 
-    return () => clearTimeout(timeoutId);
+    return () => clearTimeout(debouncingTimeout);
   }, [textValue]);
-
-  const firstUpdateParentMutation = useRef(true);
-  useEffect(() => {
-    if (firstUpdateParentMutation.current) {
-      firstUpdateParentMutation.current = false;
-      return;
-    }
-
-    if (typeof props.modifyParentObject !== "function") {
-      console.log("name:", props.text, "handler not a function!", props.hierarchyLevel);
-      return;
-    }
-    console.log(
-      "name:",
-      props.text,
-      parentObject,
-      "parent mutations",
-      props.hierarchyLevel,
-      "child index",
-      props.childIndex
-    );
-
-    if (props.hierarchyLevel === 0) {
-      props.modifyParentObject(parentObject);
-      return;
-    }
-    if (props.hierarchyLevel > 0) {
-      const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
-      copyofParent.children[props.childIndex] = parentObject;
-      // if (props.hierarchyLevel === 1) {
-      //   storeDatainLocalStorage(copyofParent);
-      // }
-      props.modifyParentObject(copyofParent);
-    }
-  }, [parentObject]);
 
   // Guard to prevent rendering text with no length
   if (props.text.trim().length === 0) return <></>;
@@ -142,14 +114,15 @@ const ListText = (props) => {
             } ${!props.mindMapMode && getTextStyles(props.hierarchyLevel)}
             `}
           >
-            <input
+            {isLargeHeader(props.hierarchyLevel) && <AddButton onClickHandler={setShowContent} />}
+            <ContentEditable
+              html={textValue}
               className={styles["text__input"]}
+              innerRef={contentEditRef}
               onChange={(event) => {
                 setTextValue(event.target.value);
               }}
-              value={textValue}
             />
-            {isLargeHeader(props.hierarchyLevel) && <AddButton onClickHandler={setShowContent} />}
           </div>
         </div>
         {showContent && (

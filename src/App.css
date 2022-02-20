@@ -17,3 +17,11 @@
 input {
   all: unset;
 }
+
+textarea {
+  all: unset;
+}
+
+[contenteditable] {
+  outline: 0px solid transparent;
+}
