@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ListText from "./components/ListText";
 import "./App.css";
 import FileUploader from "./components/FileUploader";
+import ListRenderer from "./components/ui/buttons/ListRenderer";
 
 function extractTextNodes(currentElement) {
   const childNodes = Array.from(currentElement.childNodes);
@@ -16,12 +17,58 @@ export function storeDatainLocalStorage(data) {
   localStorage.setItem("storedNotes", JSON.stringify(data));
 }
 
+function insertSibilingInLatestAndDeepestDepths(object, data) {
+  if (object.children[object.children.length - 1].children.length === 0) {
+    return insertChildren(object, data);
+  } else {
+    return insertSibilingInLatestAndDeepestDepths(
+      object.children[object.children.length - 1],
+      data
+    );
+  }
+}
+
+function insertChildInLatestAndDeepestDepths(object, data) {
+  if (object.children.length === 0) {
+    return insertChildren(object, data);
+  } else {
+    return insertChildInLatestAndDeepestDepths(object.children[object.children.length - 1], data);
+  }
+}
+function insertChildAtSpecifiedDepth(object, data, depth) {
+  if (depth === 0) {
+    return insertChildren(object, data);
+  } else {
+    return insertChildAtSpecifiedDepth(
+      object.children[object.children.length - 1],
+      data,
+      depth - 1
+    );
+  }
+}
+function insertSibilingAtSpecifiedDepth(object, data, depth) {
+  if (depth === 1) {
+    return insertChildren(object, data);
+  } else {
+    return insertSibilingAtSpecifiedDepth(
+      object.children[object.children.length - 1],
+      data,
+      depth - 1
+    );
+  }
+}
+
+// Access the last correct node and append another chlid
+function insertChildren(object, data) {
+  object.children.push(data);
+  return object;
+}
+
 const App = () => {
   const [mindMapMode, setMindMapMode] = useState(false);
   const [file, setFile] = useState();
   const [fileData, setFileData] = useState();
   const [fileJSON, setFileJSON] = useState();
-  const [newfileJSON, setNewFileJSON] = useState();
 
   useEffect(() => {
     const storedNotes = localStorage.getItem("storedNotes");
@@ -30,11 +77,14 @@ const App = () => {
     }
   }, []);
   useEffect(() => {
-    console.log("newfileJSON set!", newfileJSON);
-    if (newfileJSON) {
-      storeDatainLocalStorage(newfileJSON);
+    console.log("newfileJSON set!", fileJSON);
+    if (fileJSON) {
+      storeDatainLocalStorage(fileJSON);
     }
-  }, [newfileJSON]);
+  }, [fileJSON]);
+
+  const setFileJSONCallback = useCallback((value) => setFileJSON(value));
+  const fileJSONMemoized = useMemo(() => fileJSON, [fileJSON]);
 
   const htmlProcessor = () => {
     const elementHierarchy = {
@@ -134,57 +184,7 @@ const App = () => {
       [-1, { text: "Circulation and Breathing", hierarchyLevel: 0, children: [] }]
     );
 
-    function insertSibilingInLatestAndDeepestDepths(object, data) {
-      if (object.children[object.children.length - 1].children.length === 0) {
-        return insertChildren(object, data);
-      } else {
-        return insertSibilingInLatestAndDeepestDepths(
-          object.children[object.children.length - 1],
-          data
-        );
-      }
-    }
-
-    function insertChildInLatestAndDeepestDepths(object, data) {
-      if (object.children.length === 0) {
-        return insertChildren(object, data);
-      } else {
-        return insertChildInLatestAndDeepestDepths(
-          object.children[object.children.length - 1],
-          data
-        );
-      }
-    }
-    function insertChildAtSpecifiedDepth(object, data, depth) {
-      if (depth === 0) {
-        return insertChildren(object, data);
-      } else {
-        return insertChildAtSpecifiedDepth(
-          object.children[object.children.length - 1],
-          data,
-          depth - 1
-        );
-      }
-    }
-    function insertSibilingAtSpecifiedDepth(object, data, depth) {
-      if (depth === 1) {
-        return insertChildren(object, data);
-      } else {
-        return insertSibilingAtSpecifiedDepth(
-          object.children[object.children.length - 1],
-          data,
-          depth - 1
-        );
-      }
-    }
-
-    // Access the last correct node and append another chlid
-    function insertChildren(object, data) {
-      object.children.push(data);
-      return object;
-    }
-
-    setFileJSON(output[1]);
+    setFileJSONCallback(output[1]);
   };
 
   const processFile = () => {
@@ -206,7 +206,7 @@ const App = () => {
           object={object}
           parentObject={parentObject ? parentObject : object}
           hierarchyLevel={object.hierarchyLevel}
-          modifyParentObject={setNewFileJSON}
+          modifyParentObject={setFileJSON}
         >
           {object.children.map((child) => {
             return objectExtractor(child, object, mindMapMode);
@@ -248,7 +248,7 @@ const App = () => {
       <button onClick={htmlProcessor}>Click to process</button>
       <button
         onClick={() => {
-          storeDatainLocalStorage(fileJSON);
+          storeDatainLocalStorage(fileJSONMemoized);
         }}
       >
         Store Data in LocalStorage
@@ -257,6 +257,13 @@ const App = () => {
       {file && processFile()}
       <div>{file && file.name}</div>
       {fileJSON && objectExtractor(fileJSON, mindMapMode)}
+      {/* {fileJSONMemoized && (
+        <ListRenderer
+          child={fileJSONMemoized}
+          object={fileJSONMemoized}
+          mindMapMode={mindMapMode}
+        />
+      )} */}
       <div
         id="uploadedDocument"
         style={{ display: "none" }}

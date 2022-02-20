@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { storeDatainLocalStorage } from "../App";
 import styles from "./ListText.module.css";
 import AddButton from "./ui/buttons/AddButton";
@@ -20,24 +20,20 @@ function isLargeHeader(hierarchyLevel) {
 }
 
 const ListText = (props) => {
-  const [showContent, setShowContent] = useState(false);
+  const [showContent, setShowContent] = useState(props.expandable ? true : false);
   const [textValue, setTextValue] = useState(props.text);
   const [parentObject, setParentObject] = useState(props.object);
 
-  console.log("List Rendered", props.text);
-  // useEffect(() => {
-  //   props.modifyParentObject((previous) => {
-  //     const copyofParent = JSON.parse(JSON.stringify(previous));
-  //     copyofParent.children[props.childIndex].text = textValue;
-  //     return copyofParent;
-  //   });
-  // }, textValue);
-
-  const handleSetParent = useCallback(() => {
-    return setParentObject;
+  const handleSetParent = useCallback((value) => {
+    return setParentObject(value);
   }, []);
 
+  const firstUpdateMutation = useRef(true);
   useEffect(() => {
+    if (firstUpdateMutation.current) {
+      firstUpdateMutation.current = false;
+      return;
+    }
     // debouncing updates to prevent lags
     const timeoutId = setTimeout(() => {
       if (typeof props.modifyParentObject !== "function") {
@@ -63,37 +59,39 @@ const ListText = (props) => {
     return () => clearTimeout(timeoutId);
   }, [textValue]);
 
+  const firstUpdateParentMutation = useRef(true);
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (typeof props.modifyParentObject !== "function") {
-        console.log("name:", props.text, "handler not a function!", props.hierarchyLevel);
-        return;
-      }
-      console.log(
-        "name:",
-        props.text,
-        parentObject,
-        "parent mutations",
-        props.hierarchyLevel,
-        "child index",
-        props.childIndex
-      );
+    if (firstUpdateParentMutation.current) {
+      firstUpdateParentMutation.current = false;
+      return;
+    }
 
-      if (props.hierarchyLevel === 0) {
-        props.modifyParentObject(parentObject);
-        return;
-      }
-      if (props.hierarchyLevel > 0) {
-        const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
-        copyofParent.children[props.childIndex] = parentObject;
-        // if (props.hierarchyLevel === 1) {
-        //   storeDatainLocalStorage(copyofParent);
-        // }
-        props.modifyParentObject(copyofParent);
-      }
-    }, 2000);
+    if (typeof props.modifyParentObject !== "function") {
+      console.log("name:", props.text, "handler not a function!", props.hierarchyLevel);
+      return;
+    }
+    console.log(
+      "name:",
+      props.text,
+      parentObject,
+      "parent mutations",
+      props.hierarchyLevel,
+      "child index",
+      props.childIndex
+    );
 
-    return () => clearTimeout(timeoutId);
+    if (props.hierarchyLevel === 0) {
+      props.modifyParentObject(parentObject);
+      return;
+    }
+    if (props.hierarchyLevel > 0) {
+      const copyofParent = JSON.parse(JSON.stringify(props.parentObject));
+      copyofParent.children[props.childIndex] = parentObject;
+      // if (props.hierarchyLevel === 1) {
+      //   storeDatainLocalStorage(copyofParent);
+      // }
+      props.modifyParentObject(copyofParent);
+    }
   }, [parentObject]);
 
   // Guard to prevent rendering text with no length
