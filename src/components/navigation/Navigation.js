@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, HashRouter } from "react-router-dom";
 import DocumentPage from "../pages/DocumentPage";
 import Document from "../pages/Document";
 import Landing from "../pages/Landing";
@@ -7,7 +7,7 @@ import CreateDocument from "../pages/CreateDocument";
 
 const Navigation = () => {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/graph-notes/" element={<Landing />} />
         <Route path="/graph-notes/document/" element={<DocumentPage />}>
@@ -15,7 +15,7 @@ const Navigation = () => {
           <Route path="new" element={<CreateDocument />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 
