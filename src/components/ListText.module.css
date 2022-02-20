@@ -1,6 +1,7 @@
 .container {
   display: flex;
   flex-flow: row;
+  flex-grow: 1;
 }
 
 .text__wrapper_mindmap {
@@ -12,6 +13,7 @@
 .text__wrapper_document {
   display: flex;
   flex-flow: column;
+  flex-grow: 1;
 }
 
 .text__card_mindmap {
@@ -50,6 +52,10 @@
 .text_expandable {
 }
 
+.text__hierarchy_0 {
+  font-weight: 700;
+  font-size: 2.25rem;
+}
 .text__hierarchy_1 {
   font-weight: 600;
   font-size: 1.875rem;
@@ -110,4 +116,15 @@
   height: 24px;
   border-radius: 3px;
   margin-left: 24px;
+}
+
+.text__input {
+  -webkit-appearance: none;
+  border: none;
+  cursor: text;
+  flex-grow: 1;
+}
+
+.text__input:focus {
+  border: none;
 }
