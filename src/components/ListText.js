@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ContentEditable from "react-contenteditable";
+import { useParams } from "react-router-dom";
 import styles from "./ListText.module.css";
 import AddButton from "./ui/buttons/AddButton";
-
 function getTextStyles(hierarchyLevel) {
   if (hierarchyLevel === 0) return styles["text__hierarchy_0"];
   if (hierarchyLevel === 1) return styles["text__hierarchy_1"];
@@ -37,9 +37,12 @@ function updateText(object, id, dataToUpdate) {
 }
 
 const ListText = (props) => {
-  const [showContent, setShowContent] = useState(props.expandable ? true : false);
+  const [showContent, setShowContent] = useState(
+    props.expandable ? props.hierarchyLevel !== 2 : false
+  );
   const [textValue, setTextValue] = useState(props.text);
   const contentEditRef = useRef();
+  let params = useParams();
 
   const firstUpdate = useRef(true);
   useEffect(() => {
@@ -50,9 +53,9 @@ const ListText = (props) => {
     const debouncingTimeout = setTimeout(() => {
       console.log("Setting index");
       if (!props.object?.index) return;
-      const notes = JSON.parse(localStorage.getItem("storedNotes"));
+      const notes = JSON.parse(localStorage.getItem(params.documentId));
       localStorage.setItem(
-        "storedNotes",
+        params.documentId,
         JSON.stringify(modifyObjectAtID(notes, props.object.index, textValue))
       );
     }, 2000);
@@ -99,7 +102,9 @@ const ListText = (props) => {
             } ${!props.mindMapMode && getTextStyles(props.hierarchyLevel)}
             `}
           >
-            {isLargeHeader(props.hierarchyLevel) && <AddButton onClickHandler={setShowContent} />}
+            {isLargeHeader(props.hierarchyLevel) && (
+              <AddButton showContent={showContent} onClickHandler={setShowContent} />
+            )}
             <ContentEditable
               html={textValue}
               className={styles["text__input"]}
