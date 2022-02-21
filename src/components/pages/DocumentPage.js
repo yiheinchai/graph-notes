@@ -21,7 +21,7 @@ const DocumentPage = () => {
           marginBottom: "2rem",
         }}
       >
-        <Link to="/graph-notes/">
+        <Link to="/">
           <NavigationButton>{"< Back"}</NavigationButton>
         </Link>
       </div>

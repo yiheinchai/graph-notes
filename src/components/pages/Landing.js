@@ -9,13 +9,13 @@ const Landing = () => {
       <h1 className={styles["header"]}>Graph Notes</h1>
       <p className={styles["subheader"]}>by Yi Hein Builds</p>
       <div className={styles["notes__wrapper"]}>
-        <Link to="/graph-notes/document/cnb">
+        <Link to="/document/cnb">
           <NavigationButton>Circulation and Breathing</NavigationButton>
         </Link>
-        <Link to="/graph-notes/document/ind">
+        <Link to="/document/ind">
           <NavigationButton>Infection and Defence</NavigationButton>
         </Link>
-        <Link to="/graph-notes/document/fhmp">
+        <Link to="/document/fhmp">
           <NavigationButton>FHMP</NavigationButton>
         </Link>
         {Object.keys(localStorage)
@@ -24,7 +24,7 @@ const Landing = () => {
             const title = JSON.parse(localStorage.getItem(key)).text;
             return (
               <div style={{ position: "relative" }}>
-                <Link to={`/graph-notes/document/${key}`}>
+                <Link to={`/document/${key}`}>
                   <NavigationButton>{title}</NavigationButton>
                 </Link>
                 <div
@@ -41,7 +41,7 @@ const Landing = () => {
               </div>
             );
           })}
-        <Link to="/graph-notes/document/new">
+        <Link to="/document/new">
           <NavigationButton>Add your own notes</NavigationButton>
         </Link>
       </div>

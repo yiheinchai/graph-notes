@@ -9,8 +9,8 @@ const Navigation = () => {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/graph-notes/" element={<Landing />} />
-        <Route path="/graph-notes/document/" element={<DocumentPage />}>
+        <Route path="/" element={<Landing />} />
+        <Route path="/document/" element={<DocumentPage />}>
           <Route path=":documentId" element={<Document />} />
           <Route path="new" element={<CreateDocument />} />
         </Route>
