@@ -97,7 +97,6 @@ const App = () => {
     }
   }, []);
   useEffect(() => {
-    console.log("newfileJSON set!", fileJSON);
     if (fileJSON) {
       storeDatainLocalStorage(fileJSON);
     }
@@ -157,7 +156,6 @@ const App = () => {
             currentHierarchy = elementHierarchy[current.localName][current.style.marginLeft];
           } else {
             currentHierarchy = elementHierarchy[current.localName];
-            console.log(current.localName, extractTextNodes(current));
           }
           if (previous[0] === currentHierarchy) {
             insertSibilingInLatestAndDeepestDepths(previous[1], {

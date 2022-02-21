@@ -2,7 +2,6 @@ import ListText from "../components/ListText";
 
 export const objectExtractor = (object, mindMapMode) => {
   if (object.hierarchyLevel < 1) {
-    console.log("root text", object.text, object.hierarchyLevel);
     return (
       <ListText
         mindMapMode={mindMapMode}

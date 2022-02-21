@@ -4,7 +4,6 @@ import styles from "./AddButton.module.css";
 const AddButton = (props) => {
   return (
     <button className={styles.button} onClick={() => props.onClickHandler((previous) => !previous)}>
-      {console.log(props.showContent)}
       {!props.showContent ? <IoEyeOffOutline /> : <IoEyeOutline />}
     </button>
   );
